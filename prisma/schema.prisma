@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUM ====================
+
+enum Role {
+  admin_space
+  member
+}
+
+enum TipeSpace {
+  desk
+  meeting_room
+  private_office
+}
+
+enum StatusReservasi {
+  belum_dikonfirm
+  disetujui
+  aktif
+  selesai
+  dibatalkan
+}
+
+// ==================== MODEL / TABEL ====================
+
+model Users {
+  id        Int       @id @default(autoincrement())
+  username  String    @db.VarChar(50)
+  password  String    @db.VarChar(255)
+  role      Role
+  makerKey  String    @map("maker_key") @db.VarChar(255)
+
+  // Relasi (1 to Many)
+  members      Member[]
+  spaceOwners  SpaceOwner[]
+
+  @@map("users")
+}
+
+model Member {
+  id         Int         @id @default(autoincrement())
+  namaMember String      @map("nama_member") @db.VarChar(100)
+  instansi   String?     @db.VarChar(100)
+  alamat     String?     @db.Text
+  telp       String?     @db.VarChar(20)
+  idUser     Int         @map("id_user")
+  foto       String?     @db.VarChar(255)
+  makerKey   String      @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  user       Users       @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  reservasis Reservasi[]
+
+  @@map("member")
+}
+
+model SpaceOwner {
+  id           Int         @id @default(autoincrement())
+  namaCoworking String     @map("nama_coworking") @db.VarChar(100)
+  namaPemilik  String      @map("nama_pemilik") @db.VarChar(100)
+  telp         String?     @db.VarChar(20)
+  idUser       Int         @map("id_user")
+  makerKey     String      @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  user         Users       @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  spaces       Space[]
+  reservasis   Reservasi[]
+
+  @@map("space_owner")
+}
+
+model Space {
+  id          Int               @id @default(autoincrement())
+  namaSpace   String            @map("nama_space") @db.VarChar(100)
+  hargaPerJam Float             @map("harga_per_jam")
+  tipe        TipeSpace
+  kapasitas   Int
+  foto        String?           @db.VarChar(255)
+  deskripsi   String?           @db.Text
+  idOwner     Int               @map("id_owner")
+  makerKey    String            @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  owner       SpaceOwner        @relation(fields: [idOwner], references: [id], onDelete: Cascade)
+  details     DetailReservasi[]
+
+  @@map("space")
+}
+
+model Diskon {
+  id               Int               @id @default(autoincrement())
+  namaDiskon       String            @map("nama_diskon") @db.VarChar(100)
+  persentaseDiskon Float             @map("persentase_diskon")
+  tanggalAwal      DateTime          @map("tanggal_awal")
+  tanggalAkhir     DateTime          @map("tanggal_akhir")
+  makerKey         String            @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  details          DetailReservasi[]
+
+  @@map("diskon")
+}
+
+model Reservasi {
+  id               Int               @id @default(autoincrement())
+  tanggalReservasi DateTime          @map("tanggal_reservasi")
+  jamMulai         DateTime          @map("jam_mulai") @db.Time
+  durasiJam        Int               @map("durasi_jam")
+  idOwner          Int               @map("id_owner")
+  idMember         Int               @map("id_member")
+  status           StatusReservasi   @default(belum_dikonfirm)
+  makerKey         String            @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  owner            SpaceOwner        @relation(fields: [idOwner], references: [id], onDelete: Cascade)
+  member           Member            @relation(fields: [idMember], references: [id], onDelete: Cascade)
+  details          DetailReservasi[]
+
+  @@map("reservasi")
+}
+
+model DetailReservasi {
+  id          Int       @id @default(autoincrement())
+  idReservasi Int       @map("id_reservasi")
+  idSpace     Int       @map("id_space")
+  idDiskon    Int?      @map("id_diskon")
+  totalHarga  Float     @map("total_harga")
+  makerKey    String    @map("maker_key") @db.VarChar(255)
+
+  // Relasi
+  reservasi   Reservasi @relation(fields: [idReservasi], references: [id], onDelete: Cascade)
+  space       Space     @relation(fields: [idSpace], references: [id], onDelete: Cascade)
+  diskon      Diskon?   @relation(fields: [idDiskon], references: [id], onDelete: SetNull)
+
+  @@map("detail_reservasi")
+}
+
+model Maker {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  appName   String   @map("app_name") @db.VarChar(100)
+  appKey    String   @unique @map("app_key") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("maker")
+}

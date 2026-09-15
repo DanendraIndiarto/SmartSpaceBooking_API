@@ -1,0 +1,862 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d",
+		"name": "Smart Space Booking API (UKK Paket B)",
+		"description": "Koleksi Postman Lengkap untuk Pengujian API Reservasi Coworking Space UKK RPL Paket B.\nSudah dilengkapi dengan auto-set token & maker key pada tab Tests.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Status API",
+			"item": [
+				{
+					"name": "Get API Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Maker (Multi-Tenancy)",
+			"item": [
+				{
+					"name": "1.1 Register Maker Siswa",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.appKey) {",
+									"    pm.collectionVariables.set('maker_key', res.data.appKey);",
+									"    console.log('Auto-saved maker_key:', res.data.appKey);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Siswa UKK RPL\",\n    \"email\": \"siswa@smk.sch.id\",\n    \"app_name\": \"Smart Space\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/maker/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "maker", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 Login Maker",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"siswa@smk.sch.id\",\n    \"app_key\": \"{{maker_key}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/maker/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "maker", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.3 Get Maker Profile (/me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/maker/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "maker", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.4 Get Maker Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/maker/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "maker", "stats"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.5 Get Maker List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/maker/list",
+							"host": ["{{base_url}}"],
+							"path": ["api", "maker", "list"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Autentikasi (Auth)",
+			"item": [
+				{
+					"name": "2.1 Register Admin Space",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin_space\",\n    \"password\": \"password123\",\n    \"role\": \"admin_space\",\n    \"nama_coworking\": \"Creative Space Hub\",\n    \"nama_pemilik\": \"Budi Prakoso\",\n    \"telp\": \"081234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 Login Admin Space",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.access_token) {",
+									"    pm.collectionVariables.set('admin_token', res.data.access_token);",
+									"    console.log('Auto-saved admin_token');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin_space\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 Register Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"member_rpl\",\n    \"password\": \"password123\",\n    \"role\": \"member\",\n    \"nama_member\": \"Andi Saputra\",\n    \"instansi\": \"SMK Telkom Malang\",\n    \"telp\": \"089876543210\",\n    \"alamat\": \"Jl. Danau Ranau\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.4 Login Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.access_token) {",
+									"    pm.collectionVariables.set('member_token', res.data.access_token);",
+									"    console.log('Auto-saved member_token');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"member_rpl\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Spaces (Ruangan)",
+			"item": [
+				{
+					"name": "3.1 Create Space (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('space_id', res.data.id);",
+									"    console.log('Auto-saved space_id:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama_space\": \"Executive Meeting Room\",\n    \"tipe\": \"meeting_room\",\n    \"harga_per_jam\": 75000,\n    \"kapasitas\": 10,\n    \"deskripsi\": \"Ruangan rapat representatif dilengkapi smart TV dan high-speed Wi-Fi\",\n    \"foto\": \"/uploads/sample.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/spaces",
+							"host": ["{{base_url}}"],
+							"path": ["spaces"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 Get All Spaces",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/spaces",
+							"host": ["{{base_url}}"],
+							"path": ["spaces"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.3 Get Detail Space",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/spaces/{{space_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["spaces", "{{space_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.4 Update Space (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama_space\": \"Executive VIP Meeting Room\",\n    \"harga_per_jam\": 80000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/spaces/{{space_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["spaces", "{{space_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.5 Delete Space (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/spaces/{{space_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["spaces", "{{space_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Diskon & Promo",
+			"item": [
+				{
+					"name": "4.1 Create Diskon (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('diskon_id', res.data.id);",
+									"    console.log('Auto-saved diskon_id:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama_diskon\": \"DISKON20\",\n    \"persentase_diskon\": 20,\n    \"tanggal_awal\": \"2026-01-01T00:00:00.000Z\",\n    \"tanggal_akhir\": \"2026-12-31T23:59:59.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/diskon",
+							"host": ["{{base_url}}"],
+							"path": ["diskon"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.2 Get All Diskon",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/diskon",
+							"host": ["{{base_url}}"],
+							"path": ["diskon"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.3 Get Detail Diskon",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/diskon/{{diskon_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["diskon", "{{diskon_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.4 Update Diskon (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"persentase_diskon\": 25\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/diskon/{{diskon_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["diskon", "{{diskon_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.5 Delete Diskon (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/diskon/{{diskon_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["diskon", "{{diskon_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Reservasi (Booking)",
+			"item": [
+				{
+					"name": "5.1 Booking Space (Member)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('reservasi_id', res.data.id);",
+									"    console.log('Auto-saved reservasi_id:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{member_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id_space\": {{space_id}},\n    \"tanggal_reservasi\": \"2026-09-25\",\n    \"jam_mulai\": \"10:00\",\n    \"durasi_jam\": 3,\n    \"kode_promo\": \"DISKON20\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reservasi",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.2 Test Bentrok Jadwal (Harus 400 Bad Request)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{member_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id_space\": {{space_id}},\n    \"tanggal_reservasi\": \"2026-09-25\",\n    \"jam_mulai\": \"11:00\",\n    \"durasi_jam\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reservasi",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.3 Get All Reservasi",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reservasi",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.4 Get Detail Reservasi",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reservasi/{{reservasi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi", "{{reservasi_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.5 Update Status Reservasi (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"selesai\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reservasi/{{reservasi_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi", "{{reservasi_id}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.6 Laporan Pendapatan & Statistik (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reservasi/laporan",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi", "laporan"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.7 Delete Reservasi",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "x-maker-key",
+								"value": "{{maker_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/reservasi/{{reservasi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["reservasi", "{{reservasi_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Upload File",
+			"item": [
+				{
+					"name": "6.1 Upload File Umum",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload",
+							"host": ["{{base_url}}"],
+							"path": ["upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6.2 Upload Foto Space",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload/space",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "space"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6.3 Upload Foto Profil Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{member_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload/member",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "member"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000"
+		},
+		{
+			"key": "maker_key",
+			"value": ""
+		},
+		{
+			"key": "admin_token",
+			"value": ""
+		},
+		{
+			"key": "member_token",
+			"value": ""
+		},
+		{
+			"key": "space_id",
+			"value": "1"
+		},
+		{
+			"key": "diskon_id",
+			"value": "1"
+		},
+		{
+			"key": "reservasi_id",
+			"value": "1"
+		}
+	]
+}
