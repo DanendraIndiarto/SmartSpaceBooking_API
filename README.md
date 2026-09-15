@@ -143,6 +143,6 @@ Untuk membedakan data antar siswa dan menjaga keamanan API:
 ---
 
 ## 👨‍💻 Pengembang
-- **Nama**: Danendra Indiarto
+- **Nama**: Danendra Athallah Indiarto
 - **Kelas / Jurusan**: XII RPL 1
 - **Repositori GitHub**: [https://github.com/DanendraIndiarto/SmartSpaceBooking_API](https://github.com/DanendraIndiarto/SmartSpaceBooking_API)
