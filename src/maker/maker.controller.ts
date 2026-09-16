@@ -20,38 +20,56 @@ export class MakerController {
   @ApiOperation({
     summary: 'Registrasi data maker siswa untuk mendapatkan App Key',
   })
-  register(@Body() body: { name: string; email: string; app_name: string }) {
+  register(
+    @Body()
+    body: {
+      name: string;
+      username?: string;
+      email: string;
+      password?: string;
+      app_name?: string;
+    },
+  ) {
     return this.makerService.register(body);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login maker dengan email dan app_key' })
-  login(@Body() body: { email: string; app_key: string }) {
+  @ApiOperation({ summary: 'Login maker dengan usernameOrEmail dan password/app_key' })
+  login(
+    @Body()
+    body: {
+      usernameOrEmail?: string;
+      email?: string;
+      password?: string;
+      app_key?: string;
+    },
+  ) {
     return this.makerService.login(body);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get('me')
   @ApiOperation({ summary: 'Melihat profil maker saat ini' })
   getProfile(
     @Request() req: { user?: { id?: number; makerKey?: string } },
     @Headers('x-maker-key') makerKey?: string,
+    @Headers('authorization') authHeader?: string,
   ) {
     const keyOrId = req.user?.makerKey || makerKey || req.user?.id || '';
     return this.makerService.getProfile(keyOrId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get('stats')
-  @ApiOperation({ summary: 'Statistik total maker dan reservasi' })
-  getStats() {
-    return this.makerService.getStats();
+  @ApiOperation({ summary: 'Statistik Keseluruhan Data Siswa (App Maker)' })
+  getStats(
+    @Request() req: { user?: { makerKey?: string } },
+    @Headers('x-maker-key') makerKey?: string,
+  ) {
+    const key = makerKey || req.user?.makerKey;
+    return this.makerService.getStats(key);
   }
 
   @Get('list')
-  @ApiOperation({ summary: 'Daftar semua maker terdaftar' })
+  @ApiOperation({ summary: 'Daftar semua siswa / App Maker terdaftar' })
   getMakerList() {
     return this.makerService.getAllMakers();
   }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Diskon } from '../entities/diskon.entity';
@@ -19,14 +23,62 @@ export class DiskonService {
       tanggal_akhir: new Date(dto.tanggal_akhir),
       makerKey,
     });
-    return await this.diskonRepo.save(diskon);
+    const saved = await this.diskonRepo.save(diskon);
+    return {
+      message: 'Kode promo baru berhasil dibuat!',
+      data: saved,
+    };
   }
 
   async findAll(makerKey: string) {
     return await this.diskonRepo.find({
       where: { makerKey },
-      order: { id: 'DESC' },
+      order: { id: 'ASC' },
     });
+  }
+
+  async findActive(makerKey: string) {
+    const now = new Date();
+    return await this.diskonRepo
+      .createQueryBuilder('d')
+      .where('d.maker_key = :makerKey', { makerKey })
+      .andWhere('d.tanggal_awal <= :now AND d.tanggal_akhir >= :now', { now })
+      .orderBy('d.id', 'ASC')
+      .getMany();
+  }
+
+  async checkPromo(namaDiskon: string, makerKey: string) {
+    const diskon = await this.diskonRepo.findOne({
+      where: { nama_diskon: namaDiskon, makerKey },
+    });
+
+    if (!diskon) {
+      throw new BadRequestException(
+        'Kode promo tidak ditemukan atau sudah kedaluwarsa!',
+      );
+    }
+
+    const now = new Date();
+    const start = new Date(diskon.tanggal_awal);
+    const end = new Date(diskon.tanggal_akhir);
+
+    if (now < start || now > end) {
+      throw new BadRequestException(
+        'Kode promo tidak ditemukan atau sudah kedaluwarsa!',
+      );
+    }
+
+    return {
+      message: 'Kode promo valid dan masih berlaku!',
+      data: {
+        id: diskon.id,
+        nama_diskon: diskon.nama_diskon,
+        persentase_diskon: diskon.persentase_diskon,
+        tanggal_awal: diskon.tanggal_awal,
+        tanggal_akhir: diskon.tanggal_akhir,
+        is_active: true,
+      },
+    };
   }
 
   async findOne(id: number, makerKey: string) {
@@ -49,12 +101,16 @@ export class DiskonService {
     if (dto.tanggal_akhir !== undefined)
       diskon.tanggal_akhir = new Date(dto.tanggal_akhir);
 
-    return await this.diskonRepo.save(diskon);
+    const updated = await this.diskonRepo.save(diskon);
+    return {
+      message: 'Data promo diskon berhasil diperbarui!',
+      data: updated,
+    };
   }
 
   async remove(id: number, makerKey: string) {
     const diskon = await this.findOne(id, makerKey);
     await this.diskonRepo.remove(diskon);
-    return { message: 'Diskon berhasil dihapus', id };
+    return { message: 'Kode promo berhasil dihapus!', id, deleted: true };
   }
 }

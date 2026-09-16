@@ -2,6 +2,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
   OneToOne,
   JoinColumn,
 } from 'typeorm';
@@ -26,6 +27,9 @@ export class SpaceOwner {
 
   @Column({ name: 'maker_key', nullable: true })
   makerKey!: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'id_user' })

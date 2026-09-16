@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('maker')
@@ -13,10 +14,16 @@ export class Maker {
   @Column()
   name!: string;
 
+  @Column({ nullable: true })
+  username!: string;
+
   @Column({ unique: true })
   email!: string;
 
-  @Column({ name: 'app_name' })
+  @Column({ nullable: true })
+  password!: string;
+
+  @Column({ name: 'app_name', nullable: true })
   appName!: string;
 
   @Column({ name: 'app_key', unique: true })
@@ -24,4 +31,7 @@ export class Maker {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', nullable: true })
+  updatedAt!: Date;
 }

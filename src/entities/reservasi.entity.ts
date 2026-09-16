@@ -63,6 +63,12 @@ export class Reservasi {
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
+  @Column({ name: 'check_in_time', type: 'datetime', nullable: true })
+  checkInTime?: Date;
+
+  @Column({ name: 'check_out_time', type: 'datetime', nullable: true })
+  checkOutTime?: Date;
+
   @ManyToOne(() => Member)
   @JoinColumn({ name: 'id_member' })
   member!: Member;

@@ -6,11 +6,14 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Headers,
+  Req,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
@@ -18,12 +21,80 @@ import { MakerKeyGuard, JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser } from '../common/decorators';
 import { AuthUser } from '../common/interfaces/auth-user.interface';
 
-@ApiTags('Spaces')
-@Controller('spaces')
+@ApiTags('Space Coworking (Katalog & Ketersediaan)')
+@Controller(['api/spaces', 'spaces'])
 @UseGuards(MakerKeyGuard)
+@ApiHeader({
+  name: 'x-maker-key',
+  description: 'Header x-maker-key untuk isolasi data siswa',
+  required: true,
+})
 export class SpacesController {
   constructor(private readonly spacesService: SpacesService) {}
 
+  @Get('types')
+  @ApiOperation({
+    summary:
+      'Daftar Tipe Space (Personal Desk, Meeting Room, Private Office)',
+  })
+  getTypes() {
+    return this.spacesService.getTypes();
+  }
+
+  @Get('availability')
+  @ApiOperation({
+    summary: 'Cek Ketersediaan Space Berdasarkan Tanggal & Jam',
+  })
+  @ApiQuery({ name: 'id_space', required: true, type: Number })
+  @ApiQuery({ name: 'tanggal', required: true, type: String, example: '2026-08-30' })
+  @ApiQuery({ name: 'jam_mulai', required: true, type: String, example: '09:00' })
+  @ApiQuery({ name: 'durasi_jam', required: true, type: Number, example: 3 })
+  checkAvailability(
+    @Query('id_space') idSpace: number,
+    @Query('tanggal') tanggal: string,
+    @Query('jam_mulai') jamMulai: string,
+    @Query('durasi_jam') durasiJam: number,
+    @Headers('x-maker-key') makerKey: string,
+  ) {
+    return this.spacesService.checkAvailability(
+      +idSpace,
+      tanggal,
+      jamMulai,
+      +durasiJam,
+      makerKey,
+    );
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Lihat Semua Space Coworking (Katalog Meja/Ruangan)',
+  })
+  @ApiQuery({ name: 'tipe', required: false, enum: ['desk', 'meeting_room', 'private_office'] })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  findAll(
+    @Headers('x-maker-key') makerKey: string,
+    @Query('tipe') tipe?: string,
+    @Query('search') search?: string,
+    @Req() req?: Request,
+  ) {
+    const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
+    return this.spacesService.findAll(makerKey, tipe, search, baseUrl);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lihat Detail Space Coworking Berdasarkan ID',
+  })
+  findOne(
+    @Param('id') id: string,
+    @Headers('x-maker-key') makerKey: string,
+    @Req() req?: Request,
+  ) {
+    const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
+    return this.spacesService.findOne(+id, makerKey, baseUrl);
+  }
+
+  // Fallback endpoint pembuatan & manipulasi space (didukung juga di /api/admin/spaces)
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,16 +109,6 @@ export class SpacesController {
       throw new UnauthorizedException('Profil Space Owner tidak ditemukan');
     }
     return this.spacesService.create(dto, ownerId, makerKey);
-  }
-
-  @Get()
-  findAll(@Headers('x-maker-key') makerKey: string) {
-    return this.spacesService.findAll(makerKey);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string, @Headers('x-maker-key') makerKey: string) {
-    return this.spacesService.findOne(+id, makerKey);
   }
 
   @Patch(':id')

@@ -8,11 +8,12 @@ import { DiskonModule } from './diskon/diskon.module';
 import { ReservasiModule } from './reservasi/reservasi.module';
 import { MakerModule } from './maker/maker.module';
 import { UploadModule } from './upload/upload.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'mysql', // sesuaikan DB kamu (mysql/postgres)
+      type: 'mysql',
       host: 'localhost',
       port: 3306,
       username: 'root',
@@ -27,6 +28,7 @@ import { UploadModule } from './upload/upload.module';
     ReservasiModule,
     MakerModule,
     UploadModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

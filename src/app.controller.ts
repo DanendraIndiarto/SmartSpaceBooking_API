@@ -1,21 +1,37 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AppService } from './app.service';
+import type { Request } from 'express';
 
-@ApiTags('App')
+@ApiTags('Root & Health')
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  @ApiOperation({ summary: 'Status API dan info dasar' })
-  getHello() {
+  @ApiOperation({ summary: 'Status API & Petunjuk Penggunaan (Root Endpoint)' })
+  getRoot(@Req() req: Request) {
+    const protocol = req.protocol;
+    const host = req.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
     return {
-      message: 'Smart Space Booking API is running successfully',
-      name: 'Smart Space Booking API',
+      name: 'Coworking Space Backend API - UKK RPL Paket B',
       version: '1.0.0',
-      description: 'API Reservasi Coworking Space UKK RPL Paket B',
-      docs: '/api',
+      status: 'online',
+      swagger_docs: '/docs',
+      description:
+        'Backend service untuk menunjang kelas frontend dalam ujian UKK dengan multi-tenancy App Maker.',
+      documentation_links: {
+        swagger: `${baseUrl}/docs`,
+        swagger_json: `${baseUrl}/docs-json`,
+      },
+    };
+  }
+
+  @Get('health')
+  @ApiOperation({ summary: 'Health Check Server' })
+  getHealth() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
     };
   }
 }
