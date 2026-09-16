@@ -32,30 +32,11 @@ Sesuai dengan ketentuan berkas yang wajib dikumpulkan:
 ### 1. Prasyarat Sistem
 - **Node.js**: Versi 18.x atau lebih baru ([Unduh Node.js](https://nodejs.org/))
 - **MySQL Database**: Melalui XAMPP / Laragon / MySQL Server
+- Database kosong bernama `ukk_paket_b` pada MySQL / phpMyAdmin
 
 ---
 
-### 2. Konfigurasi Environment (`.env`)
-Salin file template `.env.example` menjadi `.env`:
-```bash
-# Untuk Windows (Command Prompt / PowerShell):
-copy .env.example .env
-
-# Atau untuk Linux / MacOS:
-cp .env.example .env
-```
-
-Pastikan isi `.env` sesuai dengan koneksi database MySQL Anda:
-```env
-DATABASE_URL="mysql://root:@localhost:3306/ukk_paket_b"
-JWT_SECRET="super_secret_key_ukk_2026"
-PORT=3000
-```
-> *Catatan: Buat database kosong bernama `ukk_paket_b` terlebih dahulu di MySQL/phpMyAdmin.*
-
----
-
-### 3. Instalasi Dependency
+### 2. Instalasi Dependency
 Jalankan perintah berikut di terminal:
 ```bash
 npm install
@@ -63,7 +44,7 @@ npm install
 
 ---
 
-### 4. Setup Basis Data
+### 3. Setup Basis Data
 Pilih salah satu cara berikut:
 
 - **Opsi A (Menggunakan Prisma Migration - Disarankan):**
@@ -76,7 +57,7 @@ Pilih salah satu cara berikut:
 
 ---
 
-### 5. Menjalankan Server
+### 4. Menjalankan Server
 ```bash
 # Mode Development (Auto-reload):
 npm run start:dev
@@ -91,7 +72,7 @@ npm run start:prod
 ## 🌐 Base URL & Dokumentasi API
 
 - **Base URL API**: `http://localhost:3000`
-- **Port Default**: `3000` (atau sesuai konfigurasi `PORT` di `.env`)
+- **Port Default**: `3000`
 - **Swagger Interactive Docs**: [http://localhost:3000/api](http://localhost:3000/api)
 - **Static File Uploads**: `http://localhost:3000/uploads/<nama_file>`
 
@@ -105,7 +86,7 @@ Untuk membedakan data antar siswa dan menjaga keamanan API:
    - Wajib disertakan di header setiap request untuk isolasi data (`x-maker-key: <YOUR_APP_KEY>`).
 2. **`Authorization`** (Bearer Token):
    - Didapatkan setelah login di endpoint `POST /auth/login`.
-   - Format: `Bearer <jwt_token>`
+   - Format: `Bearer <token>`
 
 ---
 
@@ -116,7 +97,7 @@ Untuk membedakan data antar siswa dan menjaga keamanan API:
 
 ### 2. Autentikasi (`/auth`)
 - `POST /auth/register` : Pendaftaran akun (`admin_space` atau `member`)
-- `POST /auth/login` : Login user & penerbitan JWT token
+- `POST /auth/login` : Login user & penerbitan token autentikasi
 
 ### 3. Ruangan / Space (`/spaces`)
 - `GET /spaces` : Daftar semua space
