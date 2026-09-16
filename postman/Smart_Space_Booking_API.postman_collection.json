@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ukk-paket-b-smart-space-booking-2026",
+		"_postman_id": "e3d74a98-6a5b-4c28-98e6-9b8b0e8b2f1a",
 		"name": "Smart Space Booking API (UKK RPL Paket B 2026/2027)",
 		"description": "Koleksi Postman 50 Endpoint Lengkap sesuai Soal Uji Kompetensi Keahlian (UKK) RPL Paket B - SMK Telkom Malang.\nDilengkapi dengan auto-save token dan maker key.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
