@@ -3,7 +3,6 @@ export class AuthUser {
   userId!: number;
   username!: string;
   role!: string;
-  makerKey!: string;
   memberId?: number;
   ownerId?: number;
 }

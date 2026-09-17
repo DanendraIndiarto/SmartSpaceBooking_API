@@ -72,10 +72,7 @@ export class UploadController {
       limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
-  uploadImage(
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: Request,
-  ) {
+  uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     if (!file) throw new BadRequestException('File gambar wajib diunggah');
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 

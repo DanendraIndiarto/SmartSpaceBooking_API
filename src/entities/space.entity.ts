@@ -34,9 +34,6 @@ export class Space {
   @Column({ name: 'id_owner' })
   idOwner!: number;
 
-  @Column({ name: 'maker_key', nullable: true })
-  makerKey!: string;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

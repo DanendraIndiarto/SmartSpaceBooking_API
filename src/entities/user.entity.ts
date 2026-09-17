@@ -19,9 +19,6 @@ export class User {
   @Column({ type: 'enum', enum: ['member', 'admin_space'] })
   role!: string;
 
-  @Column({ name: 'maker_key', nullable: true })
-  makerKey!: string;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }

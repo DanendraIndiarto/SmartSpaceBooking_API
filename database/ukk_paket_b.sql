@@ -13,7 +13,6 @@ DROP TABLE IF EXISTS `space`;
 DROP TABLE IF EXISTS `space_owner`;
 DROP TABLE IF EXISTS `member`;
 DROP TABLE IF EXISTS `users`;
-DROP TABLE IF EXISTS `maker`;
 
 -- --------------------------------------------------------
 -- Table structure for table `users`
@@ -23,7 +22,6 @@ CREATE TABLE `users` (
     `username` VARCHAR(50) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('admin_space', 'member') NOT NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -38,7 +36,6 @@ CREATE TABLE `member` (
     `telp` VARCHAR(20) NULL,
     `id_user` INT NOT NULL,
     `foto` VARCHAR(255) NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -51,7 +48,6 @@ CREATE TABLE `space_owner` (
     `nama_pemilik` VARCHAR(100) NOT NULL,
     `telp` VARCHAR(20) NULL,
     `id_user` INT NOT NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -67,7 +63,6 @@ CREATE TABLE `space` (
     `foto` VARCHAR(255) NULL,
     `deskripsi` TEXT NULL,
     `id_owner` INT NOT NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -80,7 +75,6 @@ CREATE TABLE `diskon` (
     `persentase_diskon` DOUBLE NOT NULL,
     `tanggal_awal` DATETIME(3) NOT NULL,
     `tanggal_akhir` DATETIME(3) NOT NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -95,7 +89,6 @@ CREATE TABLE `reservasi` (
     `id_owner` INT NOT NULL,
     `id_member` INT NOT NULL,
     `status` ENUM('belum_dikonfirm', 'disetujui', 'aktif', 'selesai', 'dibatalkan') NOT NULL DEFAULT 'belum_dikonfirm',
-    `maker_key` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -108,22 +101,6 @@ CREATE TABLE `detail_reservasi` (
     `id_space` INT NOT NULL,
     `id_diskon` INT NULL,
     `total_harga` DOUBLE NOT NULL,
-    `maker_key` VARCHAR(255) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- Table structure for table `maker`
--- --------------------------------------------------------
-CREATE TABLE `maker` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(100) NOT NULL,
-    `email` VARCHAR(100) NOT NULL,
-    `app_name` VARCHAR(100) NOT NULL,
-    `app_key` VARCHAR(255) NOT NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    UNIQUE KEY `maker_email_key` (`email`),
-    UNIQUE KEY `maker_app_key_key` (`app_key`),
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

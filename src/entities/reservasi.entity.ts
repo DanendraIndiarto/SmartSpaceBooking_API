@@ -57,9 +57,6 @@ export class Reservasi {
   })
   status!: string;
 
-  @Column({ name: 'maker_key', nullable: true })
-  makerKey!: string;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

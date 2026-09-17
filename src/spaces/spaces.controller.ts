@@ -7,28 +7,21 @@ import {
   Body,
   Param,
   Query,
-  Headers,
   Req,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
-import { MakerKeyGuard, JwtAuthGuard, RolesGuard } from '../common/guards';
+import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser } from '../common/decorators';
 import { AuthUser } from '../common/interfaces/auth-user.interface';
 
 @ApiTags('Space Coworking (Katalog & Ketersediaan)')
 @Controller(['api/spaces', 'spaces'])
-@UseGuards(MakerKeyGuard)
-@ApiHeader({
-  name: 'x-maker-key',
-  description: 'Header x-maker-key untuk isolasi data siswa',
-  required: true,
-})
 export class SpacesController {
   constructor(private readonly spacesService: SpacesService) {}
 
@@ -54,14 +47,12 @@ export class SpacesController {
     @Query('tanggal') tanggal: string,
     @Query('jam_mulai') jamMulai: string,
     @Query('durasi_jam') durasiJam: number,
-    @Headers('x-maker-key') makerKey: string,
   ) {
     return this.spacesService.checkAvailability(
       +idSpace,
       tanggal,
       jamMulai,
       +durasiJam,
-      makerKey,
     );
   }
 
@@ -72,13 +63,12 @@ export class SpacesController {
   @ApiQuery({ name: 'tipe', required: false, enum: ['desk', 'meeting_room', 'private_office'] })
   @ApiQuery({ name: 'search', required: false, type: String })
   findAll(
-    @Headers('x-maker-key') makerKey: string,
     @Query('tipe') tipe?: string,
     @Query('search') search?: string,
     @Req() req?: Request,
   ) {
     const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
-    return this.spacesService.findAll(makerKey, tipe, search, baseUrl);
+    return this.spacesService.findAll(tipe, search, baseUrl);
   }
 
   @Get(':id')
@@ -87,11 +77,10 @@ export class SpacesController {
   })
   findOne(
     @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
     @Req() req?: Request,
   ) {
     const baseUrl = req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000';
-    return this.spacesService.findOne(+id, makerKey, baseUrl);
+    return this.spacesService.findOne(+id, baseUrl);
   }
 
   // Fallback endpoint pembuatan & manipulasi space (didukung juga di /api/admin/spaces)
@@ -101,14 +90,13 @@ export class SpacesController {
   @Roles('admin_space')
   create(
     @Body() dto: CreateSpaceDto,
-    @Headers('x-maker-key') makerKey: string,
     @CurrentUser() user: AuthUser,
   ) {
     const ownerId = user?.ownerId;
     if (!ownerId) {
       throw new UnauthorizedException('Profil Space Owner tidak ditemukan');
     }
-    return this.spacesService.create(dto, ownerId, makerKey);
+    return this.spacesService.create(dto, ownerId);
   }
 
   @Patch(':id')
@@ -118,16 +106,15 @@ export class SpacesController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateSpaceDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.spacesService.update(+id, dto, makerKey);
+    return this.spacesService.update(+id, dto);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin_space')
-  remove(@Param('id') id: string, @Headers('x-maker-key') makerKey: string) {
-    return this.spacesService.remove(+id, makerKey);
+  remove(@Param('id') id: string) {
+    return this.spacesService.remove(+id);
   }
 }

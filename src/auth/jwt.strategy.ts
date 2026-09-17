@@ -11,7 +11,6 @@ export interface JwtPayload {
   sub: number;
   username: string;
   role: string;
-  makerKey: string;
 }
 
 @Injectable()
@@ -62,7 +61,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: user.id,
       username: user.username,
       role: user.role,
-      makerKey: user.makerKey || payload.makerKey,
       memberId,
       ownerId,
     };

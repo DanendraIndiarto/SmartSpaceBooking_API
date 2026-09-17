@@ -34,9 +34,9 @@ export class AdminService {
   ) {}
 
   // 1. Profil Lokasi Coworking Space
-  async getProfile(userId: number, makerKey: string) {
+  async getProfile(userId: number) {
     let owner = await this.spaceOwnerRepo.findOne({
-      where: [{ idUser: userId, makerKey }, { idUser: userId }],
+      where: { idUser: userId },
     });
 
     if (!owner) {
@@ -47,7 +47,6 @@ export class AdminService {
         nama_coworking: 'Moklet Hub Coworking Space',
         nama_pemilik: user ? user.username : 'Admin Coworking',
         telp: '081298765432',
-        makerKey,
       });
       owner = await this.spaceOwnerRepo.save(owner);
     }
@@ -63,17 +62,15 @@ export class AdminService {
   async updateProfile(
     userId: number,
     dto: UpdateCoworkingProfileDto,
-    makerKey: string,
   ) {
     let owner = await this.spaceOwnerRepo.findOne({
-      where: [{ idUser: userId, makerKey }, { idUser: userId }],
+      where: { idUser: userId },
     });
 
     if (!owner) {
       owner = this.spaceOwnerRepo.create({
         idUser: userId,
         ...dto,
-        makerKey,
       });
     } else {
       owner.nama_coworking = dto.nama_coworking;
@@ -95,13 +92,12 @@ export class AdminService {
   }
 
   // 2. Manajemen Member / Pelanggan
-  async getMembers(makerKey: string, search?: string) {
+  async getMembers(search?: string) {
     const qb = this.memberRepo
-      .createQueryBuilder('m')
-      .where('m.maker_key = :makerKey', { makerKey });
+      .createQueryBuilder('m');
 
     if (search) {
-      qb.andWhere(
+      qb.where(
         '(m.nama_member LIKE :s OR m.instansi LIKE :s OR m.telp LIKE :s)',
         { s: `%${search}%` },
       );
@@ -121,7 +117,7 @@ export class AdminService {
     }));
   }
 
-  async createMember(dto: CreateMemberAdminDto, makerKey: string) {
+  async createMember(dto: CreateMemberAdminDto) {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
@@ -136,7 +132,6 @@ export class AdminService {
       username: dto.username,
       password: hashedPassword,
       role: 'member',
-      makerKey,
     });
     const savedUser = await this.userRepo.save(user);
 
@@ -147,7 +142,6 @@ export class AdminService {
       telp: dto.telp,
       foto: dto.foto || '',
       idUser: savedUser.id,
-      makerKey,
     });
     const savedMember = await this.memberRepo.save(member);
 
@@ -164,9 +158,9 @@ export class AdminService {
     };
   }
 
-  async getMemberById(id: number, makerKey: string) {
+  async getMemberById(id: number) {
     const member = await this.memberRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
     });
     if (!member) {
       throw new NotFoundException('Data member tidak ditemukan');
@@ -184,10 +178,9 @@ export class AdminService {
   async updateMember(
     id: number,
     dto: UpdateMemberAdminDto,
-    makerKey: string,
   ) {
     const member = await this.memberRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
       relations: { user: true },
     });
     if (!member) {
@@ -224,9 +217,9 @@ export class AdminService {
     };
   }
 
-  async deleteMember(id: number, makerKey: string) {
+  async deleteMember(id: number) {
     const member = await this.memberRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
     });
     if (!member) {
       throw new NotFoundException('Data member tidak ditemukan');
@@ -248,9 +241,8 @@ export class AdminService {
   }
 
   // 3. Manajemen Space Ruangan & Meja (Panel Admin)
-  async getSpaces(makerKey: string, baseUrl: string) {
+  async getSpaces(baseUrl = 'http://localhost:3000') {
     const spaces = await this.spaceRepo.find({
-      where: { makerKey },
       order: { id: 'ASC' },
     });
 
@@ -270,12 +262,10 @@ export class AdminService {
   async createSpace(
     dto: CreateSpaceDto,
     ownerId: number,
-    makerKey: string,
   ) {
     const space = this.spaceRepo.create({
       ...dto,
       idOwner: ownerId,
-      makerKey,
     });
     const saved = await this.spaceRepo.save(space);
 
@@ -294,9 +284,9 @@ export class AdminService {
     };
   }
 
-  async getSpaceById(id: number, makerKey: string, _baseUrl: string) {
+  async getSpaceById(id: number, _baseUrl?: string) {
     const space = await this.spaceRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
     });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
@@ -312,8 +302,8 @@ export class AdminService {
     };
   }
 
-  async updateSpace(id: number, dto: UpdateSpaceDto, makerKey: string) {
-    const space = await this.spaceRepo.findOne({ where: { id, makerKey } });
+  async updateSpace(id: number, dto: UpdateSpaceDto) {
+    const space = await this.spaceRepo.findOne({ where: { id } });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
     }
@@ -333,8 +323,8 @@ export class AdminService {
     };
   }
 
-  async deleteSpace(id: number, makerKey: string) {
-    const space = await this.spaceRepo.findOne({ where: { id, makerKey } });
+  async deleteSpace(id: number) {
+    const space = await this.spaceRepo.findOne({ where: { id } });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
     }
@@ -349,9 +339,8 @@ export class AdminService {
   }
 
   // 4. Manajemen Kode Promo & Diskon (Panel Admin)
-  async getDiskon(makerKey: string) {
+  async getDiskon() {
     const list = await this.diskonRepo.find({
-      where: { makerKey },
       order: { id: 'ASC' },
     });
     return list.map((d) => ({
@@ -363,12 +352,11 @@ export class AdminService {
     }));
   }
 
-  async createDiskon(dto: CreateDiskonDto, makerKey: string) {
+  async createDiskon(dto: CreateDiskonDto) {
     const diskon = this.diskonRepo.create({
       ...dto,
       tanggal_awal: new Date(dto.tanggal_awal),
       tanggal_akhir: new Date(dto.tanggal_akhir),
-      makerKey,
     });
     const saved = await this.diskonRepo.save(diskon);
 
@@ -384,8 +372,8 @@ export class AdminService {
     };
   }
 
-  async getDiskonById(id: number, makerKey: string) {
-    const diskon = await this.diskonRepo.findOne({ where: { id, makerKey } });
+  async getDiskonById(id: number) {
+    const diskon = await this.diskonRepo.findOne({ where: { id } });
     if (!diskon) {
       throw new NotFoundException('Data diskon tidak ditemukan');
     }
@@ -398,8 +386,8 @@ export class AdminService {
     };
   }
 
-  async updateDiskon(id: number, dto: UpdateDiskonDto, makerKey: string) {
-    const diskon = await this.diskonRepo.findOne({ where: { id, makerKey } });
+  async updateDiskon(id: number, dto: UpdateDiskonDto) {
+    const diskon = await this.diskonRepo.findOne({ where: { id } });
     if (!diskon) {
       throw new NotFoundException('Data diskon tidak ditemukan');
     }
@@ -424,8 +412,8 @@ export class AdminService {
     };
   }
 
-  async deleteDiskon(id: number, makerKey: string) {
-    const diskon = await this.diskonRepo.findOne({ where: { id, makerKey } });
+  async deleteDiskon(id: number) {
+    const diskon = await this.diskonRepo.findOne({ where: { id } });
     if (!diskon) {
       throw new NotFoundException('Data diskon tidak ditemukan');
     }
@@ -441,7 +429,6 @@ export class AdminService {
 
   // 5. Transaksi Reservasi & Check-In / Check-Out
   async getReservasi(
-    makerKey: string,
     month?: number,
     year?: number,
     status?: string,
@@ -451,8 +438,7 @@ export class AdminService {
     const qb = this.resRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.member', 'member')
-      .leftJoinAndSelect('r.space', 'space')
-      .where('r.maker_key = :makerKey', { makerKey });
+      .leftJoinAndSelect('r.space', 'space');
 
     if (month && year) {
       const monthStr = Number(month).toString().padStart(2, '0');
@@ -509,8 +495,8 @@ export class AdminService {
     }));
   }
 
-  async updateReservasiStatus(id: number, status: string, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async updateReservasiStatus(id: number, status: string) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -528,8 +514,8 @@ export class AdminService {
     };
   }
 
-  async checkIn(id: number, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async checkIn(id: number) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -550,8 +536,8 @@ export class AdminService {
     };
   }
 
-  async checkOut(id: number, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async checkOut(id: number) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -573,7 +559,7 @@ export class AdminService {
   }
 
   // 6. Rekapitulasi Laporan Pendapatan Bulanan (Panel Admin)
-  async getMonthlyReport(makerKey: string, month?: number, year?: number) {
+  async getMonthlyReport(month?: number, year?: number) {
     const selectedYear = year ? Number(year) : new Date().getFullYear();
     const selectedMonth = month ? Number(month) : new Date().getMonth() + 1;
     const monthStr = selectedMonth.toString().padStart(2, '0');
@@ -582,8 +568,7 @@ export class AdminService {
     const qb = this.resRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.space', 'space')
-      .where('r.maker_key = :makerKey', { makerKey })
-      .andWhere('r.tanggal_reservasi LIKE :datePrefix', {
+      .where('r.tanggal_reservasi LIKE :datePrefix', {
         datePrefix: `${datePrefix}%`,
       });
 
@@ -657,8 +642,8 @@ export class AdminService {
     };
   }
 
-  async getIncomeReport(makerKey: string, month?: number, year?: number) {
-    const report = await this.getMonthlyReport(makerKey, month, year);
+  async getIncomeReport(month?: number, year?: number) {
+    const report = await this.getMonthlyReport(month, year);
     return {
       month: report.month,
       year: report.year,

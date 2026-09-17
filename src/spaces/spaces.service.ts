@@ -47,10 +47,9 @@ export class SpacesService {
     tanggal: string,
     jamMulai: string,
     durasiJam: number,
-    makerKey: string,
   ) {
     const space = await this.spaceRepo.findOne({
-      where: { id: idSpace, makerKey },
+      where: { id: idSpace },
     });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
@@ -68,40 +67,28 @@ export class SpacesService {
         st: ['belum_dikonfirm', 'disetujui', 'aktif'],
       })
       .andWhere('r.jam_mulai < :selesai AND r.jam_selesai > :mulai', {
-        mulai: jamMulai,
         selesai: jamSelesai,
+        mulai: jamMulai,
       })
       .getOne();
 
-    if (overlap) {
-      throw new BadRequestException(
-        'Maaf, space sudah terisi atau dibooking pada jam tersebut!',
-      );
-    }
-
     return {
-      available: true,
-      id_space: space.id,
+      available: !overlap,
+      space_id: space.id,
       nama_space: space.nama_space,
-      tanggal,
-      jam_mulai: jamMulai,
-      jam_selesai: jamSelesai,
-      durasi_jam: Number(durasiJam),
       harga_per_jam: space.harga_per_jam,
       estimasi_total: space.harga_per_jam * Number(durasiJam),
     };
   }
 
   async findAll(
-    makerKey: string,
     tipe?: string,
     search?: string,
     baseUrl = 'http://localhost:3000',
   ) {
     const qb = this.spaceRepo
       .createQueryBuilder('s')
-      .leftJoinAndSelect('s.owner', 'owner')
-      .where('s.maker_key = :makerKey', { makerKey });
+      .leftJoinAndSelect('s.owner', 'owner');
 
     if (tipe) {
       qb.andWhere('s.tipe = :tipe', { tipe });
@@ -145,9 +132,9 @@ export class SpacesService {
     });
   }
 
-  async findOne(id: number, makerKey: string, baseUrl = 'http://localhost:3000') {
+  async findOne(id: number, baseUrl = 'http://localhost:3000') {
     const space = await this.spaceRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
       relations: { owner: true },
     });
     if (!space) {
@@ -179,17 +166,16 @@ export class SpacesService {
     };
   }
 
-  async create(dto: CreateSpaceDto, ownerId: number, makerKey: string) {
+  async create(dto: CreateSpaceDto, ownerId: number) {
     const space = this.spaceRepo.create({
       ...dto,
       idOwner: ownerId,
-      makerKey,
     });
     return await this.spaceRepo.save(space);
   }
 
-  async update(id: number, dto: UpdateSpaceDto, makerKey: string) {
-    const space = await this.spaceRepo.findOne({ where: { id, makerKey } });
+  async update(id: number, dto: UpdateSpaceDto) {
+    const space = await this.spaceRepo.findOne({ where: { id } });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
     }
@@ -197,8 +183,8 @@ export class SpacesService {
     return await this.spaceRepo.save(space);
   }
 
-  async remove(id: number, makerKey: string) {
-    const space = await this.spaceRepo.findOne({ where: { id, makerKey } });
+  async remove(id: number) {
+    const space = await this.spaceRepo.findOne({ where: { id } });
     if (!space) {
       throw new NotFoundException('Space dengan ID tersebut tidak ditemukan!');
     }

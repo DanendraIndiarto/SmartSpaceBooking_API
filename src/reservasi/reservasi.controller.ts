@@ -7,27 +7,21 @@ import {
   Body,
   Param,
   Query,
-  Headers,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ReservasiService } from './reservasi.service';
 import { CreateReservasiDto } from './dto/create-reservasi.dto';
 import { UpdateReservasiDto } from './dto/update-reservasi.dto';
-import { MakerKeyGuard, JwtAuthGuard, RolesGuard } from '../common/guards';
+import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser } from '../common/decorators';
 import { AuthUser } from '../common/interfaces/auth-user.interface';
 
 @ApiTags('Reservasi Member (Pemesanan & Histori)')
 @Controller(['api/reservasi', 'reservasi'])
-@UseGuards(MakerKeyGuard, JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
-@ApiHeader({
-  name: 'x-maker-key',
-  description: 'Header x-maker-key untuk isolasi data siswa',
-  required: true,
-})
 export class ReservasiController {
   constructor(private readonly reservasiService: ReservasiService) {}
 
@@ -40,14 +34,13 @@ export class ReservasiController {
   })
   create(
     @Body() dto: CreateReservasiDto,
-    @Headers('x-maker-key') makerKey: string,
     @CurrentUser() user: AuthUser,
   ) {
     const memberId = user?.memberId;
     if (!memberId) {
       throw new UnauthorizedException('Profil Member tidak ditemukan');
     }
-    return this.reservasiService.create(dto, memberId, makerKey);
+    return this.reservasiService.create(dto, memberId);
   }
 
   @Get('my')
@@ -57,14 +50,13 @@ export class ReservasiController {
     summary: 'Lihat Status Semua Pemesanan Milik Sendiri (Member)',
   })
   findMyReservations(
-    @Headers('x-maker-key') makerKey: string,
     @CurrentUser() user: AuthUser,
   ) {
     const memberId = user?.memberId;
     if (!memberId) {
       throw new UnauthorizedException('Profil Member tidak ditemukan');
     }
-    return this.reservasiService.findMyReservations(memberId, makerKey);
+    return this.reservasiService.findMyReservations(memberId);
   }
 
   @Get('my/history')
@@ -76,7 +68,6 @@ export class ReservasiController {
   @ApiQuery({ name: 'month', required: false, type: Number, description: 'Bulan (1-12)' })
   @ApiQuery({ name: 'year', required: false, type: Number, description: 'Tahun' })
   findMyHistory(
-    @Headers('x-maker-key') makerKey: string,
     @CurrentUser() user: AuthUser,
     @Query('month') month?: number,
     @Query('year') year?: number,
@@ -85,29 +76,23 @@ export class ReservasiController {
     if (!memberId) {
       throw new UnauthorizedException('Profil Member tidak ditemukan');
     }
-    return this.reservasiService.findMyHistory(memberId, makerKey, month, year);
+    return this.reservasiService.findMyHistory(memberId, month, year);
   }
 
   @Get(':id/e-ticket')
   @ApiOperation({
     summary: 'Cetak E-Ticket / Bukti Nota Digital Reservasi',
   })
-  getETicket(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.reservasiService.getETicket(+id, makerKey);
+  getETicket(@Param('id') id: string) {
+    return this.reservasiService.getETicket(+id);
   }
 
   @Get(':id')
   @ApiOperation({
     summary: 'Lihat Detail Reservasi Berdasarkan ID',
   })
-  findOne(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.reservasiService.findOne(+id, makerKey);
+  findOne(@Param('id') id: string) {
+    return this.reservasiService.findOne(+id);
   }
 
   @Patch(':id/cancel')
@@ -118,33 +103,29 @@ export class ReservasiController {
   })
   cancel(
     @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
     @CurrentUser() user: AuthUser,
   ) {
     const memberId = user?.memberId;
     if (!memberId) {
       throw new UnauthorizedException('Profil Member tidak ditemukan');
     }
-    return this.reservasiService.cancel(+id, memberId, makerKey);
+    return this.reservasiService.cancel(+id, memberId);
   }
 
   // Legacy / admin routes (juga didukung penuh di /api/admin/reservasi)
   @Get()
   @ApiOperation({ summary: 'Lihat Seluruh Reservasi (Legacy)' })
-  findAll(
-    @Headers('x-maker-key') makerKey: string,
-    @CurrentUser() user: AuthUser,
-  ) {
+  findAll(@CurrentUser() user: AuthUser) {
     const memberId = user?.role === 'member' ? user?.memberId : undefined;
-    return this.reservasiService.findAll(makerKey, memberId);
+    return this.reservasiService.findAll(memberId);
   }
 
   @Get('laporan')
   @UseGuards(RolesGuard)
   @Roles('admin_space')
   @ApiOperation({ summary: 'Laporan Pendapatan (Legacy)' })
-  getReport(@Headers('x-maker-key') makerKey: string) {
-    return this.reservasiService.getReport(makerKey);
+  getReport() {
+    return this.reservasiService.getReport();
   }
 
   @Patch(':id/status')
@@ -154,9 +135,8 @@ export class ReservasiController {
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: string,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.reservasiService.updateStatus(+id, status, makerKey);
+    return this.reservasiService.updateStatus(+id, status);
   }
 
   @Patch(':id')
@@ -164,14 +144,13 @@ export class ReservasiController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateReservasiDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.reservasiService.update(+id, dto, makerKey);
+    return this.reservasiService.update(+id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Hapus Reservasi (Legacy)' })
-  remove(@Param('id') id: string, @Headers('x-maker-key') makerKey: string) {
-    return this.reservasiService.remove(+id, makerKey);
+  remove(@Param('id') id: string) {
+    return this.reservasiService.remove(+id);
   }
 }

@@ -8,16 +8,13 @@ import {
   Body,
   Param,
   Query,
-  Headers,
   Req,
   UseGuards,
-  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiHeader,
   ApiQuery,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -30,20 +27,15 @@ import { CreateSpaceDto } from '../spaces/dto/create-space.dto';
 import { UpdateSpaceDto } from '../spaces/dto/update-space.dto';
 import { CreateDiskonDto } from '../diskon/dto/create-diskon.dto';
 import { UpdateDiskonDto } from '../diskon/dto/update-diskon.dto';
-import { MakerKeyGuard, JwtAuthGuard, RolesGuard } from '../common/guards';
+import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser } from '../common/decorators';
 import { AuthUser } from '../common/interfaces/auth-user.interface';
 
 @ApiTags('Admin Pengelola Coworking Space')
 @Controller('api/admin')
-@UseGuards(MakerKeyGuard, JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin_space')
 @ApiBearerAuth()
-@ApiHeader({
-  name: 'x-maker-key',
-  description: 'Header x-maker-key untuk isolasi data siswa',
-  required: true,
-})
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -52,11 +44,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Lihat Data Profil Lokasi Coworking Space',
   })
-  getProfile(
-    @CurrentUser() user: AuthUser,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.getProfile(user.userId || user.id, makerKey);
+  getProfile(@CurrentUser() user: AuthUser) {
+    return this.adminService.getProfile(user.userId || user.id);
   }
 
   // 26. PUT /api/admin/profile
@@ -67,9 +56,8 @@ export class AdminController {
   updateProfile(
     @CurrentUser() user: AuthUser,
     @Body() dto: UpdateCoworkingProfileDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.adminService.updateProfile(user.userId || user.id, dto, makerKey);
+    return this.adminService.updateProfile(user.userId || user.id, dto);
   }
 
   // 27. GET /api/admin/members
@@ -78,11 +66,8 @@ export class AdminController {
     summary: 'Daftar Semua Member / Pelanggan Coworking',
   })
   @ApiQuery({ name: 'search', required: false, type: String })
-  getMembers(
-    @Headers('x-maker-key') makerKey: string,
-    @Query('search') search?: string,
-  ) {
-    return this.adminService.getMembers(makerKey, search);
+  getMembers(@Query('search') search?: string) {
+    return this.adminService.getMembers(search);
   }
 
   // 28. POST /api/admin/members
@@ -90,11 +75,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Tambah Data Member Baru oleh Admin',
   })
-  createMember(
-    @Body() dto: CreateMemberAdminDto,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.createMember(dto, makerKey);
+  createMember(@Body() dto: CreateMemberAdminDto) {
+    return this.adminService.createMember(dto);
   }
 
   // 29. GET /api/admin/members/{id}
@@ -102,11 +84,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Detail Data Member Berdasarkan ID',
   })
-  getMemberById(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.getMemberById(+id, makerKey);
+  getMemberById(@Param('id') id: string) {
+    return this.adminService.getMemberById(+id);
   }
 
   // 30. PUT /api/admin/members/{id}
@@ -117,9 +96,8 @@ export class AdminController {
   updateMember(
     @Param('id') id: string,
     @Body() dto: UpdateMemberAdminDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.adminService.updateMember(+id, dto, makerKey);
+    return this.adminService.updateMember(+id, dto);
   }
 
   // 31. DELETE /api/admin/members/{id}
@@ -127,11 +105,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Hapus Data Member / Pelanggan (Admin)',
   })
-  deleteMember(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.deleteMember(+id, makerKey);
+  deleteMember(@Param('id') id: string) {
+    return this.adminService.deleteMember(+id);
   }
 
   // 32. GET /api/admin/spaces
@@ -139,9 +114,9 @@ export class AdminController {
   @ApiOperation({
     summary: 'Daftar Semua Ruangan & Meja Milik Admin',
   })
-  getSpaces(@Headers('x-maker-key') makerKey: string, @Req() req: Request) {
+  getSpaces(@Req() req: Request) {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    return this.adminService.getSpaces(makerKey, baseUrl);
+    return this.adminService.getSpaces(baseUrl);
   }
 
   // 33. POST /api/admin/spaces
@@ -152,10 +127,9 @@ export class AdminController {
   createSpace(
     @Body() dto: CreateSpaceDto,
     @CurrentUser() user: AuthUser,
-    @Headers('x-maker-key') makerKey: string,
   ) {
     const ownerId = user.ownerId || 1;
-    return this.adminService.createSpace(dto, ownerId, makerKey);
+    return this.adminService.createSpace(dto, ownerId);
   }
 
   // 34. GET /api/admin/spaces/{id}
@@ -165,11 +139,10 @@ export class AdminController {
   })
   getSpaceById(
     @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
     @Req() req: Request,
   ) {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    return this.adminService.getSpaceById(+id, makerKey, baseUrl);
+    return this.adminService.getSpaceById(+id, baseUrl);
   }
 
   // 35. PUT /api/admin/spaces/{id}
@@ -180,9 +153,8 @@ export class AdminController {
   updateSpace(
     @Param('id') id: string,
     @Body() dto: UpdateSpaceDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.adminService.updateSpace(+id, dto, makerKey);
+    return this.adminService.updateSpace(+id, dto);
   }
 
   // 36. DELETE /api/admin/spaces/{id}
@@ -190,11 +162,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Hapus Data Ruangan / Meja Space',
   })
-  deleteSpace(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.deleteSpace(+id, makerKey);
+  deleteSpace(@Param('id') id: string) {
+    return this.adminService.deleteSpace(+id);
   }
 
   // 37. GET /api/admin/diskon
@@ -202,8 +171,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Daftar Semua Kode Promo / Diskon Event',
   })
-  getDiskon(@Headers('x-maker-key') makerKey: string) {
-    return this.adminService.getDiskon(makerKey);
+  getDiskon() {
+    return this.adminService.getDiskon();
   }
 
   // 38. POST /api/admin/diskon
@@ -211,11 +180,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Tambah Kode Promo / Event Diskon Baru',
   })
-  createDiskon(
-    @Body() dto: CreateDiskonDto,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.createDiskon(dto, makerKey);
+  createDiskon(@Body() dto: CreateDiskonDto) {
+    return this.adminService.createDiskon(dto);
   }
 
   // 39. GET /api/admin/diskon/{id}
@@ -223,11 +189,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Detail Data Diskon Berdasarkan ID (Admin)',
   })
-  getDiskonById(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.getDiskonById(+id, makerKey);
+  getDiskonById(@Param('id') id: string) {
+    return this.adminService.getDiskonById(+id);
   }
 
   // 40. PUT /api/admin/diskon/{id}
@@ -238,9 +201,8 @@ export class AdminController {
   updateDiskon(
     @Param('id') id: string,
     @Body() dto: UpdateDiskonDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.adminService.updateDiskon(+id, dto, makerKey);
+    return this.adminService.updateDiskon(+id, dto);
   }
 
   // 41. DELETE /api/admin/diskon/{id}
@@ -248,11 +210,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Hapus Kode Promo / Diskon',
   })
-  deleteDiskon(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.deleteDiskon(+id, makerKey);
+  deleteDiskon(@Param('id') id: string) {
+    return this.adminService.deleteDiskon(+id);
   }
 
   // 42. GET /api/admin/reservasi
@@ -267,7 +226,6 @@ export class AdminController {
   @ApiQuery({ name: 'id_space', required: false, type: Number })
   @ApiQuery({ name: 'tanggal', required: false, type: String })
   getReservasi(
-    @Headers('x-maker-key') makerKey: string,
     @Query('month') month?: number,
     @Query('year') year?: number,
     @Query('status') status?: string,
@@ -275,7 +233,6 @@ export class AdminController {
     @Query('tanggal') tanggal?: string,
   ) {
     return this.adminService.getReservasi(
-      makerKey,
       month,
       year,
       status,
@@ -292,9 +249,8 @@ export class AdminController {
   updateReservasiStatus(
     @Param('id') id: string,
     @Body() dto: UpdateReservasiStatusDto,
-    @Headers('x-maker-key') makerKey: string,
   ) {
-    return this.adminService.updateReservasiStatus(+id, dto.status, makerKey);
+    return this.adminService.updateReservasiStatus(+id, dto.status);
   }
 
   // 44. POST /api/admin/reservasi/{id}/check-in
@@ -302,11 +258,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Check-In Pelanggan (Ubah Status ke Aktif / Digunakan)',
   })
-  checkIn(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.checkIn(+id, makerKey);
+  checkIn(@Param('id') id: string) {
+    return this.adminService.checkIn(+id);
   }
 
   // 45. POST /api/admin/reservasi/{id}/check-out
@@ -314,11 +267,8 @@ export class AdminController {
   @ApiOperation({
     summary: 'Check-Out Pelanggan (Ubah Status ke Selesai)',
   })
-  checkOut(
-    @Param('id') id: string,
-    @Headers('x-maker-key') makerKey: string,
-  ) {
-    return this.adminService.checkOut(+id, makerKey);
+  checkOut(@Param('id') id: string) {
+    return this.adminService.checkOut(+id);
   }
 
   // 46. GET /api/admin/reports/monthly
@@ -330,11 +280,10 @@ export class AdminController {
   @ApiQuery({ name: 'month', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   getMonthlyReport(
-    @Headers('x-maker-key') makerKey: string,
     @Query('month') month?: number,
     @Query('year') year?: number,
   ) {
-    return this.adminService.getMonthlyReport(makerKey, month, year);
+    return this.adminService.getMonthlyReport(month, year);
   }
 
   // 47. GET /api/admin/reports/income
@@ -345,10 +294,9 @@ export class AdminController {
   @ApiQuery({ name: 'month', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   getIncomeReport(
-    @Headers('x-maker-key') makerKey: string,
     @Query('month') month?: number,
     @Query('year') year?: number,
   ) {
-    return this.adminService.getIncomeReport(makerKey, month, year);
+    return this.adminService.getIncomeReport(month, year);
   }
 }

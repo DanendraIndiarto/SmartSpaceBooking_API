@@ -11,7 +11,6 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { Member } from '../entities/member.entity';
 import { SpaceOwner } from '../entities/space-owner.entity';
-import { Maker } from '../entities/maker.entity';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterMemberDto } from './dto/register-member.dto';
 import { RegisterAdminSpaceDto } from './dto/register-admin-space.dto';
@@ -25,18 +24,15 @@ export class AuthService {
     @InjectRepository(Member) private readonly memberRepo: Repository<Member>,
     @InjectRepository(SpaceOwner)
     private readonly spaceOwnerRepo: Repository<SpaceOwner>,
-    @InjectRepository(Maker) private readonly makerRepo: Repository<Maker>,
     private readonly jwtService: JwtService,
   ) {}
 
-  async registerMember(dto: RegisterMemberDto, makerKey: string) {
+  async registerMember(dto: RegisterMemberDto) {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
     if (existing) {
-      throw new BadRequestException(
-        'Username sudah digunakan oleh akun lain!',
-      );
+      throw new BadRequestException('Username sudah digunakan oleh akun lain!');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -44,7 +40,6 @@ export class AuthService {
       username: dto.username,
       password: hashedPassword,
       role: 'member',
-      makerKey,
     });
     const savedUser = await this.userRepo.save(user);
 
@@ -55,7 +50,6 @@ export class AuthService {
       telp: dto.telp,
       foto: dto.foto || '',
       idUser: savedUser.id,
-      makerKey,
     });
     const savedMember = await this.memberRepo.save(member);
 
@@ -63,7 +57,6 @@ export class AuthService {
       sub: savedUser.id,
       username: savedUser.username,
       role: savedUser.role,
-      makerKey,
       memberId: savedMember.id,
     };
     const token = this.jwtService.sign(payload);
@@ -87,14 +80,12 @@ export class AuthService {
     };
   }
 
-  async registerAdminSpace(dto: RegisterAdminSpaceDto, makerKey: string) {
+  async registerAdminSpace(dto: RegisterAdminSpaceDto) {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
     if (existing) {
-      throw new BadRequestException(
-        'Username sudah digunakan oleh akun lain!',
-      );
+      throw new BadRequestException('Username sudah digunakan oleh akun lain!');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -102,7 +93,6 @@ export class AuthService {
       username: dto.username,
       password: hashedPassword,
       role: 'admin_space',
-      makerKey,
     });
     const savedUser = await this.userRepo.save(user);
 
@@ -111,7 +101,6 @@ export class AuthService {
       nama_pemilik: dto.nama_pemilik,
       telp: dto.telp,
       idUser: savedUser.id,
-      makerKey,
     });
     const savedOwner = await this.spaceOwnerRepo.save(spaceOwner);
 
@@ -119,7 +108,6 @@ export class AuthService {
       sub: savedUser.id,
       username: savedUser.username,
       role: savedUser.role,
-      makerKey,
       ownerId: savedOwner.id,
     };
     const token = this.jwtService.sign(payload);
@@ -141,7 +129,7 @@ export class AuthService {
     };
   }
 
-  async register(dto: RegisterDto, makerKey: string) {
+  async register(dto: RegisterDto) {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
@@ -154,7 +142,6 @@ export class AuthService {
       username: dto.username,
       password: hashedPassword,
       role: dto.role,
-      makerKey,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -168,7 +155,6 @@ export class AuthService {
         telp: dto.telp || '',
         foto: dto.foto || '',
         idUser: savedUser.id,
-        makerKey,
       });
       profile = await this.memberRepo.save(member);
     } else if (dto.role === 'admin_space') {
@@ -177,7 +163,6 @@ export class AuthService {
         nama_pemilik: dto.nama_pemilik || dto.username,
         telp: dto.telp || '',
         idUser: savedUser.id,
-        makerKey,
       });
       profile = await this.spaceOwnerRepo.save(spaceOwner);
     }
@@ -186,7 +171,6 @@ export class AuthService {
       sub: savedUser.id,
       username: savedUser.username,
       role: savedUser.role,
-      makerKey,
       memberId: (profile as Member)?.id,
       ownerId: (profile as SpaceOwner)?.id,
     };
@@ -227,15 +211,10 @@ export class AuthService {
       });
     }
 
-    const maker = user.makerKey
-      ? await this.makerRepo.findOne({ where: { appKey: user.makerKey } })
-      : null;
-
     const payload = {
       sub: user.id,
       username: user.username,
       role: user.role,
-      makerKey: user.makerKey,
       memberId: member?.id,
       ownerId: spaceOwner?.id,
     };
@@ -248,7 +227,6 @@ export class AuthService {
         id: user.id,
         username: user.username,
         role: user.role,
-        maker_id: maker?.id || null,
         member: member
           ? {
               id: member.id,
@@ -318,4 +296,3 @@ export class AuthService {
     };
   }
 }
-

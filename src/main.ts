@@ -54,16 +54,6 @@ async function bootstrap() {
     .setDescription('Dokumentasi API Reservasi Coworking Space UKK RPL Paket B')
     .setVersion('1.0')
     .addBearerAuth() // Untuk pengujian JWT Auth
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-maker-key',
-        in: 'header',
-        description:
-          'Header wajib untuk identifikasi/isolasi data siswa (Multi-Tenancy)',
-      },
-      'x-maker-key',
-    )
     .build();
 
   // Buat dokumen Swagger

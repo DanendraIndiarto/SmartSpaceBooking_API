@@ -25,9 +25,6 @@ export class SpaceOwner {
   @Column({ name: 'id_user' })
   idUser!: number;
 
-  @Column({ name: 'maker_key', nullable: true })
-  makerKey!: string;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

@@ -18,7 +18,7 @@ export class AppController {
       status: 'online',
       swagger_docs: '/docs',
       description:
-        'Backend service untuk menunjang kelas frontend dalam ujian UKK dengan multi-tenancy App Maker.',
+        'Backend service untuk manajemen dan reservasi coworking space dalam ujian UKK RPL Paket B.',
       documentation_links: {
         swagger: `${baseUrl}/docs`,
         swagger_json: `${baseUrl}/docs-json`,

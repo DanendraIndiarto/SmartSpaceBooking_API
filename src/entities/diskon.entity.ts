@@ -16,7 +16,4 @@ export class Diskon {
 
   @Column({ type: 'datetime' })
   tanggal_akhir!: Date;
-
-  @Column({ name: 'maker_key', nullable: true })
-  makerKey!: string;
 }

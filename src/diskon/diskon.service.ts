@@ -16,12 +16,11 @@ export class DiskonService {
     private readonly diskonRepo: Repository<Diskon>,
   ) {}
 
-  async create(dto: CreateDiskonDto, makerKey: string) {
+  async create(dto: CreateDiskonDto) {
     const diskon = this.diskonRepo.create({
       ...dto,
       tanggal_awal: new Date(dto.tanggal_awal),
       tanggal_akhir: new Date(dto.tanggal_akhir),
-      makerKey,
     });
     const saved = await this.diskonRepo.save(diskon);
     return {
@@ -30,26 +29,24 @@ export class DiskonService {
     };
   }
 
-  async findAll(makerKey: string) {
+  async findAll() {
     return await this.diskonRepo.find({
-      where: { makerKey },
       order: { id: 'ASC' },
     });
   }
 
-  async findActive(makerKey: string) {
+  async findActive() {
     const now = new Date();
     return await this.diskonRepo
       .createQueryBuilder('d')
-      .where('d.maker_key = :makerKey', { makerKey })
-      .andWhere('d.tanggal_awal <= :now AND d.tanggal_akhir >= :now', { now })
+      .where('d.tanggal_awal <= :now AND d.tanggal_akhir >= :now', { now })
       .orderBy('d.id', 'ASC')
       .getMany();
   }
 
-  async checkPromo(namaDiskon: string, makerKey: string) {
+  async checkPromo(namaDiskon: string) {
     const diskon = await this.diskonRepo.findOne({
-      where: { nama_diskon: namaDiskon, makerKey },
+      where: { nama_diskon: namaDiskon },
     });
 
     if (!diskon) {
@@ -81,9 +78,9 @@ export class DiskonService {
     };
   }
 
-  async findOne(id: number, makerKey: string) {
+  async findOne(id: number) {
     const diskon = await this.diskonRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
     });
     if (!diskon) {
       throw new NotFoundException('Data diskon tidak ditemukan');
@@ -91,8 +88,8 @@ export class DiskonService {
     return diskon;
   }
 
-  async update(id: number, dto: UpdateDiskonDto, makerKey: string) {
-    const diskon = await this.findOne(id, makerKey);
+  async update(id: number, dto: UpdateDiskonDto) {
+    const diskon = await this.findOne(id);
     if (dto.nama_diskon !== undefined) diskon.nama_diskon = dto.nama_diskon;
     if (dto.persentase_diskon !== undefined)
       diskon.persentase_diskon = dto.persentase_diskon;
@@ -108,8 +105,8 @@ export class DiskonService {
     };
   }
 
-  async remove(id: number, makerKey: string) {
-    const diskon = await this.findOne(id, makerKey);
+  async remove(id: number) {
+    const diskon = await this.findOne(id);
     await this.diskonRepo.remove(diskon);
     return { message: 'Kode promo berhasil dihapus!', id, deleted: true };
   }

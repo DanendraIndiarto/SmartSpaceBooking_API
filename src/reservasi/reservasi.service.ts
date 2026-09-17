@@ -29,9 +29,9 @@ export class ReservasiService {
   ) {}
 
   // 1. Buat Reservasi Baru
-  async create(dto: CreateReservasiDto, memberId: number, makerKey: string) {
+  async create(dto: CreateReservasiDto, memberId: number) {
     const space = await this.spaceRepo.findOne({
-      where: { id: dto.id_space, makerKey },
+      where: { id: dto.id_space },
     });
     if (!space) throw new NotFoundException('Space tidak ditemukan!');
 
@@ -68,8 +68,8 @@ export class ReservasiService {
     if (dto.kode_promo || dto.id_diskon) {
       const promo = await this.diskonRepo.findOne({
         where: dto.kode_promo
-          ? { nama_diskon: dto.kode_promo, makerKey }
-          : { id: dto.id_diskon, makerKey },
+          ? { nama_diskon: dto.kode_promo }
+          : { id: dto.id_diskon },
       });
 
       if (promo) {
@@ -95,7 +95,6 @@ export class ReservasiService {
       potongan_diskon,
       total_bayar,
       status: 'belum_dikonfirm',
-      makerKey,
     });
 
     const saved = await this.resRepo.save(reservasi);
@@ -123,9 +122,9 @@ export class ReservasiService {
   }
 
   // 2. Lihat Status Semua Pemesanan Milik Sendiri (Member)
-  async findMyReservations(memberId: number, makerKey: string) {
+  async findMyReservations(memberId: number) {
     const list = await this.resRepo.find({
-      where: { idMember: memberId, makerKey },
+      where: { idMember: memberId },
       relations: { space: true },
       order: { id: 'DESC' },
     });
@@ -152,15 +151,13 @@ export class ReservasiService {
   // 3. Histori Pemesanan Berdasarkan Bulan & Tahun (Member)
   async findMyHistory(
     memberId: number,
-    makerKey: string,
     month?: number,
     year?: number,
   ) {
     const qb = this.resRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.space', 'space')
-      .where('r.id_member = :memberId', { memberId })
-      .andWhere('r.maker_key = :makerKey', { makerKey });
+      .where('r.id_member = :memberId', { memberId });
 
     const selectedYear = year ? Number(year) : new Date().getFullYear();
     const selectedMonth = month ? Number(month) : new Date().getMonth() + 1;
@@ -200,9 +197,9 @@ export class ReservasiService {
   }
 
   // 4. Cetak E-Ticket / Bukti Nota Digital Reservasi
-  async getETicket(id: number, makerKey: string) {
+  async getETicket(id: number) {
     const reservasi = await this.resRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
       relations: {
         member: true,
         space: {
@@ -271,15 +268,15 @@ export class ReservasiService {
           total_dibayar: reservasi.total_bayar,
         },
         status_reservasi: reservasi.status,
-        qr_code_payload: `VERIFY-RESERVASI-${reservasi.id}-${reservasi.makerKey}`,
+        qr_code_payload: `VERIFY-RESERVASI-${reservasi.id}`,
       },
     };
   }
 
   // 5. Lihat Detail Reservasi Berdasarkan ID
-  async findOne(id: number, makerKey: string) {
+  async findOne(id: number) {
     const reservasi = await this.resRepo.findOne({
-      where: { id, makerKey },
+      where: { id },
       relations: {
         member: true,
         space: true,
@@ -317,9 +314,9 @@ export class ReservasiService {
   }
 
   // 6. Batalkan Pemesanan (Member)
-  async cancel(id: number, memberId: number, makerKey: string) {
+  async cancel(id: number, memberId: number) {
     const reservasi = await this.resRepo.findOne({
-      where: { id, idMember: memberId, makerKey },
+      where: { id, idMember: memberId },
     });
 
     if (!reservasi) {
@@ -346,8 +343,8 @@ export class ReservasiService {
   }
 
   // 7. Ambil Semua Reservasi (Bisa difilter)
-  async findAll(makerKey: string, memberId?: number) {
-    const where: any = { makerKey };
+  async findAll(memberId?: number) {
+    const where: any = {};
     if (memberId) where.idMember = memberId;
 
     return await this.resRepo.find({
@@ -358,8 +355,8 @@ export class ReservasiService {
   }
 
   // 8. Update Status Umum
-  async updateStatus(id: number, status: string, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async updateStatus(id: number, status: string) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -368,8 +365,8 @@ export class ReservasiService {
   }
 
   // 9. Update Reservasi Lengkap
-  async update(id: number, dto: UpdateReservasiDto, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async update(id: number, dto: UpdateReservasiDto) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -378,8 +375,8 @@ export class ReservasiService {
   }
 
   // 10. Hapus Reservasi
-  async remove(id: number, makerKey: string) {
-    const reservasi = await this.resRepo.findOne({ where: { id, makerKey } });
+  async remove(id: number) {
+    const reservasi = await this.resRepo.findOne({ where: { id } });
     if (!reservasi) {
       throw new NotFoundException('Data reservasi tidak ditemukan');
     }
@@ -388,17 +385,15 @@ export class ReservasiService {
   }
 
   // 11. Laporan Pendapatan Sederhana
-  async getReport(makerKey: string) {
+  async getReport() {
     const totalStats = await this.resRepo
       .createQueryBuilder('r')
       .select('SUM(r.total_bayar)', 'total_pendapatan')
       .addSelect('COUNT(r.id)', 'total_transaksi')
-      .where('r.maker_key = :makerKey', { makerKey })
       .andWhere('r.status IN (:...st)', { st: ['aktif', 'selesai'] })
       .getRawOne();
 
     const rincian = await this.resRepo.find({
-      where: { makerKey },
       relations: { member: true, space: true },
       order: { id: 'DESC' },
     });
